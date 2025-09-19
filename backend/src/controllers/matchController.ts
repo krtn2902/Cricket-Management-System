@@ -1,0 +1,185 @@
+import { Response } from 'express';
+import { MatchStore, TeamStore } from '../models/InMemoryStore';
+import { AuthRequest } from '../middleware/auth-inmemory';
+
+export const getAllMatches = async (req: AuthRequest, res: Response) => {
+  try {
+    const matches = MatchStore.findAll().map(match => {
+      const team1 = TeamStore.findById(match.team1);
+      const team2 = TeamStore.findById(match.team2);
+      return {
+        ...match,
+        team1: team1 || { _id: match.team1, name: 'Unknown Team' },
+        team2: team2 || { _id: match.team2, name: 'Unknown Team' }
+      };
+    });
+    res.json(matches);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMatchById = async (req: AuthRequest, res: Response) => {
+  try {
+    const match = MatchStore.findById(req.params.id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    const team1 = TeamStore.findById(match.team1);
+    const team2 = TeamStore.findById(match.team2);
+
+    const matchWithTeams = {
+      ...match,
+      team1: team1 || { _id: match.team1, name: 'Unknown Team' },
+      team2: team2 || { _id: match.team2, name: 'Unknown Team' }
+    };
+
+    res.json(matchWithTeams);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const createMatch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { title, team1, team2, venue, date, overs, tournament } = req.body;
+
+    // Validate required fields
+    if (!title || !team1 || !team2 || !venue || !date || !overs) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Validate teams exist
+    const team1Data = TeamStore.findById(team1);
+    const team2Data = TeamStore.findById(team2);
+
+    if (!team1Data || !team2Data) {
+      return res.status(400).json({ message: 'One or both teams not found' });
+    }
+
+    // Validate teams are different
+    if (team1 === team2) {
+      return res.status(400).json({ message: 'Team 1 and Team 2 must be different' });
+    }
+
+    const match = MatchStore.create({
+      title,
+      team1,
+      team2,
+      venue,
+      date: new Date(date),
+      overs: parseInt(overs),
+      status: 'scheduled',
+      tournament,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json(match);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const updateMatch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title, team1, team2, venue, date, overs, status, team1Score, team2Score, winner } = req.body;
+
+    const match = MatchStore.findById(id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is the creator or has admin role
+    if (match.createdBy !== req.user._id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this match' });
+    }
+
+    // Validate teams if provided
+    if (team1) {
+      const team1Data = TeamStore.findById(team1);
+      if (!team1Data) {
+        return res.status(400).json({ message: 'Team 1 not found' });
+      }
+    }
+
+    if (team2) {
+      const team2Data = TeamStore.findById(team2);
+      if (!team2Data) {
+        return res.status(400).json({ message: 'Team 2 not found' });
+      }
+    }
+
+    // Validate teams are different if both provided
+    if (team1 && team2 && team1 === team2) {
+      return res.status(400).json({ message: 'Team 1 and Team 2 must be different' });
+    }
+
+    const updatedMatch = MatchStore.update(id, {
+      title: title || match.title,
+      team1: team1 || match.team1,
+      team2: team2 || match.team2,
+      venue: venue || match.venue,
+      date: date ? new Date(date) : match.date,
+      overs: overs ? parseInt(overs) : match.overs,
+      status: status || match.status,
+      team1Score: team1Score || match.team1Score,
+      team2Score: team2Score || match.team2Score,
+      winner: winner || match.winner,
+    });
+
+    res.json(updatedMatch);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const deleteMatch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const match = MatchStore.findById(id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is the creator or has admin role
+    if (match.createdBy !== req.user._id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to delete this match' });
+    }
+
+    MatchStore.delete(id);
+    res.json({ message: 'Match deleted successfully' });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateMatchScore = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { team1Score, team2Score, status, winner } = req.body;
+
+    const match = MatchStore.findById(id);
+    if (!match) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is the creator or has admin role
+    if (match.createdBy !== req.user._id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to update this match' });
+    }
+
+    const updatedMatch = MatchStore.update(id, {
+      team1Score: team1Score || match.team1Score,
+      team2Score: team2Score || match.team2Score,
+      status: status || match.status,
+      winner: winner || match.winner,
+    });
+
+    res.json(updatedMatch);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
