@@ -6,7 +6,7 @@ import {
   updateMatch,
   deleteMatch,
   updateMatchScore,
-} from '../controllers/matchController';
+} from '../controllers/matchController-database';
 import { authenticate, authorize } from '../middleware/auth-inmemory';
 
 const router = express.Router();

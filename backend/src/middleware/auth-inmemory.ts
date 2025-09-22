@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { UserStore } from '../models/InMemoryStore';
+import { UserStore } from '../models/DatabaseStore';
 
 export interface AuthRequest extends Request {
   user?: any;
@@ -15,7 +15,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
-    const user = UserStore.findById(decoded.userId);
+    const user = await UserStore.findById(decoded.userId);
 
     if (!user) {
       return res.status(401).json({ message: 'Token is not valid' });

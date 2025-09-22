@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { UserStore } from '../models/InMemoryStore';
+import { UserStore } from '../models/DatabaseStore';
 import { AuthRequest } from '../middleware/auth';
 
 const generateToken = (userId: string) => {
@@ -15,7 +15,7 @@ export const register = async (req: Request, res: Response) => {
     const { name, email, password, role } = req.body;
 
     // Check if user already exists
-    const existingUser = UserStore.findByEmail(email);
+    const existingUser = await UserStore.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
@@ -25,7 +25,7 @@ export const register = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = UserStore.create({
+    const user = await UserStore.create({
       name,
       email,
       password: hashedPassword,
@@ -52,7 +52,7 @@ export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = UserStore.findByEmail(email);
+    const user = await UserStore.findByEmail(email);
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -80,7 +80,7 @@ export const login = async (req: Request, res: Response) => {
 
 export const getProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const user = UserStore.findById(req.user._id);
+    const user = await UserStore.findById(req.user._id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

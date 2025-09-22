@@ -39,7 +39,7 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { name, city, captain, coach, founded } = req.body;
 
-    const team = TeamStore.create({
+    const team = await TeamStore.create({
       name,
       city,
       captain,
@@ -60,22 +60,21 @@ export const updateTeam = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const { name, city, captain, coach, founded } = req.body;
 
-    const team = TeamStore.findById(id);
+    const team = await TeamStore.findById(id);
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if user is the creator or has admin role
+    // Check if user is authorized to update this team
     if (team.createdBy !== req.user._id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to update this team' });
     }
 
-    const updatedTeam = TeamStore.update(id, {
+    const updatedTeam = await TeamStore.update(id, {
       name: name || team.name,
       city: city || team.city,
       captain: captain || team.captain,
       coach: coach || team.coach,
-      founded: founded ? new Date(founded) : team.founded,
     });
 
     res.json(updatedTeam);
@@ -88,27 +87,29 @@ export const deleteTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
-    const team = TeamStore.findById(id);
+    const team = await TeamStore.findById(id);
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if user is the creator or has admin role
+    // Check if user is authorized to delete this team
     if (team.createdBy !== req.user._id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to delete this team' });
     }
 
-    // Remove team reference from players
-    const teamPlayers = PlayerStore.findByTeam(id);
-    teamPlayers.forEach(player => {
-      const updatedTeams = player.teams ? player.teams.filter(teamId => teamId !== id) : [];
-      PlayerStore.update(player._id, { teams: updatedTeams });
-    });
+    // Remove team from all players
+    const teamPlayers = await PlayerStore.findByTeam(id);
+    await Promise.all(
+      teamPlayers.map(async (player) => {
+        const updatedTeams = player.teams ? player.teams.filter((teamId: string) => teamId !== id) : [];
+        await PlayerStore.update(player._id, { teams: updatedTeams });
+      })
+    );
 
-    TeamStore.delete(id);
+    await TeamStore.delete(id);
     res.json({ message: 'Team deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -116,34 +117,34 @@ export const addPlayerToTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { teamId, playerId } = req.params;
 
-    const team = TeamStore.findById(teamId);
-    const player = PlayerStore.findById(playerId);
-
-    if (!team || !player) {
-      return res.status(404).json({ message: 'Team or Player not found' });
+    const team = await TeamStore.findById(teamId);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if user is the creator or has admin role
+    // Check if user is authorized to modify this team
     if (team.createdBy !== req.user._id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to modify this team' });
     }
 
     // Check if player is already in the team
     if (team.players.includes(playerId)) {
-      return res.status(400).json({ message: 'Player is already in the team' });
+      return res.status(400).json({ message: 'Player is already in this team' });
     }
 
-    TeamStore.update(teamId, {
+    // Update team
+    const updatedTeam = await TeamStore.update(teamId, {
       players: [...team.players, playerId]
     });
-    
-    const currentPlayer = PlayerStore.findById(playerId);
+
+    // Update player
+    const currentPlayer = await PlayerStore.findById(playerId);
     if (currentPlayer) {
       const updatedTeams = currentPlayer.teams ? [...currentPlayer.teams, teamId] : [teamId];
-      PlayerStore.update(playerId, { teams: updatedTeams });
+      await PlayerStore.update(playerId, { teams: updatedTeams });
     }
 
-    res.json({ message: 'Player added to team successfully' });
+    res.json(updatedTeam);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -153,29 +154,29 @@ export const removePlayerFromTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { teamId, playerId } = req.params;
 
-    const team = TeamStore.findById(teamId);
-    const player = PlayerStore.findById(playerId);
-
-    if (!team || !player) {
-      return res.status(404).json({ message: 'Team or Player not found' });
+    const team = await TeamStore.findById(teamId);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
     }
 
-    // Check if user is the creator or has admin role
+    // Check if user is authorized to modify this team
     if (team.createdBy !== req.user._id && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized to modify this team' });
     }
 
-    TeamStore.update(teamId, {
-      players: team.players.filter(p => p !== playerId)
+    // Update team
+    const updatedTeam = await TeamStore.update(teamId, {
+      players: team.players.filter((p: string) => p !== playerId)
     });
-    
-    const currentPlayer = PlayerStore.findById(playerId);
-    if (currentPlayer) {
-      const updatedTeams = currentPlayer.teams ? currentPlayer.teams.filter(id => id !== teamId) : [];
-      PlayerStore.update(playerId, { teams: updatedTeams });
+
+    // Update player
+    const currentPlayer = await PlayerStore.findById(playerId);
+    if (currentPlayer && currentPlayer.teams) {
+      const updatedTeams = currentPlayer.teams.filter((id: string) => id !== teamId);
+      await PlayerStore.update(playerId, { teams: updatedTeams });
     }
 
-    res.json({ message: 'Player removed from team successfully' });
+    res.json(updatedTeam);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

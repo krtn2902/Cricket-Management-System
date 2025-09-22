@@ -6,7 +6,7 @@ import {
   createPlayer,
   updatePlayer,
   deletePlayer,
-} from '../controllers/playerController';
+} from '../controllers/playerController-database';
 import { authenticate, authorize } from '../middleware/auth-inmemory';
 
 const router = express.Router();

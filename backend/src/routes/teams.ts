@@ -7,7 +7,7 @@ import {
   deleteTeam,
   addPlayerToTeam,
   removePlayerFromTeam,
-} from '../controllers/teamController-inmemory';
+} from '../controllers/teamController-database';
 import { authenticate, authorize } from '../middleware/auth-inmemory';
 
 const router = express.Router();

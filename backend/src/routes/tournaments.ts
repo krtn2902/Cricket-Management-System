@@ -7,7 +7,7 @@ import {
   deleteTournament,
   addTeamToTournament,
   removeTeamFromTournament,
-} from '../controllers/tournamentController';
+} from '../controllers/tournamentController-database';
 import { authenticate, authorize } from '../middleware/auth-inmemory';
 
 const router = express.Router();
