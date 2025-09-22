@@ -98,7 +98,8 @@ export const deleteTeam = async (req: AuthRequest, res: Response) => {
     // Remove team reference from players
     const teamPlayers = PlayerStore.findByTeam(id);
     teamPlayers.forEach(player => {
-      PlayerStore.update(player._id, { team: undefined });
+      const updatedTeams = player.teams ? player.teams.filter(teamId => teamId !== id) : [];
+      PlayerStore.update(player._id, { teams: updatedTeams });
     });
 
     TeamStore.delete(id);
@@ -133,7 +134,11 @@ export const addPlayerToTeam = async (req: AuthRequest, res: Response) => {
       players: [...team.players, playerId]
     });
     
-    PlayerStore.update(playerId, { team: teamId });
+    const currentPlayer = PlayerStore.findById(playerId);
+    if (currentPlayer) {
+      const updatedTeams = currentPlayer.teams ? [...currentPlayer.teams, teamId] : [teamId];
+      PlayerStore.update(playerId, { teams: updatedTeams });
+    }
 
     res.json({ message: 'Player added to team successfully' });
   } catch (error: any) {
@@ -161,7 +166,11 @@ export const removePlayerFromTeam = async (req: AuthRequest, res: Response) => {
       players: team.players.filter(p => p !== playerId)
     });
     
-    PlayerStore.update(playerId, { team: undefined });
+    const currentPlayer = PlayerStore.findById(playerId);
+    if (currentPlayer) {
+      const updatedTeams = currentPlayer.teams ? currentPlayer.teams.filter(id => id !== teamId) : [];
+      PlayerStore.update(playerId, { teams: updatedTeams });
+    }
 
     res.json({ message: 'Player removed from team successfully' });
   } catch (error: any) {

@@ -43,7 +43,7 @@ export const getTournamentById = async (req: AuthRequest, res: Response) => {
 
 export const createTournament = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, startDate, endDate, teams } = req.body;
+    const { name, description, startDate, endDate, format, status, teams } = req.body;
 
     // Validate required fields
     if (!name || !startDate || !endDate) {
@@ -69,11 +69,13 @@ export const createTournament = async (req: AuthRequest, res: Response) => {
 
     const tournament = TournamentStore.create({
       name,
+      description: description || '',
       startDate: start,
       endDate: end,
+      format: format || 'T20',
+      status: status || 'upcoming',
       teams: teams || [],
       matches: [],
-      status: 'upcoming',
       createdBy: req.user._id,
     });
 
@@ -86,7 +88,7 @@ export const createTournament = async (req: AuthRequest, res: Response) => {
 export const updateTournament = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, startDate, endDate, teams, status, winner } = req.body;
+    const { name, description, startDate, endDate, format, teams, status, winner } = req.body;
 
     const tournament = TournamentStore.findById(id);
     if (!tournament) {
@@ -117,8 +119,10 @@ export const updateTournament = async (req: AuthRequest, res: Response) => {
 
     const updatedTournament = TournamentStore.update(id, {
       name: name || tournament.name,
+      description: description || tournament.description,
       startDate: start,
       endDate: end,
+      format: format || tournament.format,
       teams: teams || tournament.teams,
       status: status || tournament.status,
       winner: winner || tournament.winner,

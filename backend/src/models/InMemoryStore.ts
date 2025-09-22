@@ -25,12 +25,17 @@ interface InMemoryTeam {
 interface InMemoryPlayer {
   _id: string;
   name: string;
+  email: string;
   age: number;
-  position: 'batsman' | 'bowler' | 'all-rounder' | 'wicket-keeper';
-  battingHand: 'left' | 'right';
-  bowlingStyle?: 'fast' | 'medium' | 'spin' | 'off-spin' | 'leg-spin';
-  team?: string;
-  experience: number;
+  position: string;
+  battingStyle: 'Right-handed' | 'Left-handed';
+  bowlingStyle: 'Right-arm fast' | 'Left-arm fast' | 'Right-arm spin' | 'Left-arm spin' | 'None';
+  teams?: string[];
+  stats?: {
+    matchesPlayed: number;
+    runs: number;
+    wickets: number;
+  };
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
@@ -65,11 +70,13 @@ interface InMemoryMatch {
 interface InMemoryTournament {
   _id: string;
   name: string;
+  description: string;
   startDate: Date;
   endDate: Date;
+  format: 'T20' | 'ODI' | 'Test';
+  status: 'upcoming' | 'ongoing' | 'completed';
   teams: string[];
   matches: string[];
-  status: 'upcoming' | 'ongoing' | 'completed';
   winner?: string;
   createdBy: string;
   createdAt: Date;
@@ -139,7 +146,7 @@ export const TeamStore = {
 export const PlayerStore = {
   findAll: () => players,
   findById: (id: string) => players.find(player => player._id === id),
-  findByTeam: (teamId: string) => players.filter(player => player.team === teamId),
+  findByTeam: (teamId: string) => players.filter(player => player.teams && player.teams.includes(teamId)),
   create: (playerData: Omit<InMemoryPlayer, '_id' | 'createdAt' | 'updatedAt'>) => {
     const player: InMemoryPlayer = {
       ...playerData,
