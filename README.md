@@ -47,12 +47,15 @@ cricket-management-system/
 ### Installation
 
 1. Clone the repository
-2. Install backend dependencies:
+   ```bash
+   git clone https://github.com/krtn2902/Cricket-Management-System.git
+   ```
+3. Install backend dependencies:
     ```bash
     cd backend
     npm install
     ```
-3. Install frontend dependencies:
+4. Install frontend dependencies:
     ```bash
     cd frontend
     npm install
