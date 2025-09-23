@@ -95,8 +95,21 @@ const Matches: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Convert format to overs
+      const formatToOvers = {
+        'T20': 20,
+        'ODI': 50,
+        'Test': 90 // Assuming Test matches have 90 overs per side
+      };
+
       const matchData = {
-        ...formData,
+        title: formData.title,
+        team1: formData.team1,
+        team2: formData.team2,
+        venue: formData.venue,
+        date: formData.date,
+        overs: formatToOvers[formData.format],
+        status: formData.status,
         tournament: formData.tournament || undefined,
       };
 
