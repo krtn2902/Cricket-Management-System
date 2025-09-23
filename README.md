@@ -64,7 +64,7 @@ cricket-management-system/
 
     ```bash
     cd backend
-    npm run dev
+    npm start
     ```
 
 2. Start the frontend development server:
