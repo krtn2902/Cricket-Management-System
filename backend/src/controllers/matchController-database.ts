@@ -60,6 +60,11 @@ export const createMatch = async (req: AuthRequest, res: Response) => {
       tournament
     } = req.body;
 
+    // Validate required fields
+    if (!title || !team1 || !team2 || !venue || !date || !overs) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
     // Validate teams exist
     const team1Exists = await TeamStore.findById(team1);
     const team2Exists = await TeamStore.findById(team2);
@@ -70,6 +75,11 @@ export const createMatch = async (req: AuthRequest, res: Response) => {
     
     if (!team2Exists) {
       return res.status(400).json({ message: 'Team 2 not found' });
+    }
+
+    // Validate teams are different
+    if (team1 === team2) {
+      return res.status(400).json({ message: 'Team 1 and Team 2 must be different' });
     }
 
     const match = await MatchStore.create({
