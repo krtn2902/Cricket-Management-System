@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import logo from '../logo.png';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,25 +22,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className="nav-container">
           <div className="nav-content">
             <div className="flex items-center">
-              <Link to="/" className="nav-brand">
-                🏏 Cricket Manager
+              <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center' }}>
+                <img src={logo} alt="Cricket Manager Logo" style={{ height: '32px', marginRight: '8px' }} />
+                Cricket Manager
               </Link>
               {isAuthenticated && (
                 <div className="nav-menu">
                   <Link to="/dashboard" className="nav-link">
-                    📊 Dashboard
+                    Dashboard
                   </Link>
                   <Link to="/teams" className="nav-link">
-                    🏆 Teams
+                    Teams
                   </Link>
                   <Link to="/players" className="nav-link">
-                    👥 Players
+                    Players
                   </Link>
                   <Link to="/matches" className="nav-link">
-                    ⚾ Matches
+                    Matches
                   </Link>
                   <Link to="/tournaments" className="nav-link">
-                    🏅 Tournaments
+                    Tournaments
                   </Link>
                 </div>
               )}
@@ -48,7 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {isAuthenticated && user ? (
                 <>
                   <span style={{ color: 'white', fontSize: '0.875rem' }}>
-                    👋 Welcome, {user.name} ({user.role})
+                    {user.name} ({user.role})
                   </span>
                   <button
                     onClick={handleLogout}

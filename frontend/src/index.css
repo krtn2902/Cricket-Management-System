@@ -200,7 +200,7 @@ nav {
   text-decoration: none;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
-  font-size: 0.8rem;
+  font-size: 1rem;
   font-weight: 600;
   transition: all 0.2s ease-in-out;
   position: relative;
@@ -421,19 +421,19 @@ nav {
 /* Navigation responsive */
 .nav-container {
   max-width: 80rem;
-  margin: 0 auto;
-  padding: 0 0.75rem;
+  /* margin: 0 auto; */
+  padding: 0 1rem;
 }
 
 .nav-content {
   display: flex;
   justify-content: space-between;
-  height: 2.5rem;
+  height: 4rem;
   align-items: center;
 }
 
 .nav-brand {
-  font-size: 1.125rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: white;
   text-decoration: none;
@@ -443,7 +443,7 @@ nav {
 .nav-menu {
   display: none;
   margin-left: 1.5rem;
-  gap: 1rem;
+  gap: 0.5rem;
   flex-wrap: nowrap;
 }
 
@@ -1019,9 +1019,9 @@ nav {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 868px) {
   .main-content {
-    padding: 0.75rem;
+    padding: 1rem;
   }
   
   .page-header {
@@ -1050,7 +1050,7 @@ nav {
   }
   
   .nav-content {
-    height: 2rem;
+    height: 3.3rem;
   }
   
   .nav-brand {

@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {isAuthenticated && user ? (
                 <>
                   <span style={{ color: 'white', fontSize: '0.875rem' }}>
-                    👋 Welcome, {user.name} ({user.role})
+                    {user.name} ({user.role})
                   </span>
                   <button
                     onClick={handleLogout}
